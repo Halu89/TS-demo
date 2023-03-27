@@ -9,8 +9,11 @@ function firstLetter(str: string) {
  */
 const a = firstLetter("acrobatic");
 
+/* ================================================== */
+
 type SnakeCase = string;
 type CamelCase = string;
+
 declare function snaketoCamelCase(str: SnakeCase): CamelCase
 
 /**
@@ -18,6 +21,26 @@ declare function snaketoCamelCase(str: SnakeCase): CamelCase
  */
 const varName = snaketoCamelCase("MY_VARIABLE")
 
+/* ================================================== */
+
+/**
+ * How to add constraints on the event name, and the value in the callback ?
+ * @param obj
+ */
+declare function makeWatchedObject<T extends Record<string, any>>(obj: T): T & {
+    on(eventName: any, callback: (newValue: any) => void): void;
+}
+
+const person = makeWatchedObject({
+    firstName: "Saoirse",
+    lastName: "Ronan",
+    age: 26,
+});
+person.on("event", (newValue) => {
+    console.log(newValue);
+})
+
+/* ================================================== */
 
 interface User {
     firstName: string,
