@@ -1,45 +1,50 @@
+/**
+ * Creates a module to avoid polluting the namespace with types and interface
+ */
 export {}
 
+/**
+ * We create a base interface
+ */
 interface ID {
     id: string;
 }
 
+/**
+ * A user extends the base id interface: A user has an id.
+ */
 interface User extends ID {
     username: string;
     email: string;
     profilePic: string;
-    role: "admin" | "user" | "guest";
+    role: "admin" | "user" | "guest" | "sysadmin";
 }
 
-type Post<TAuthor extends ID> = {
+/**
+ * The post also has an id.
+ *
+ * How to restrict the type of author to objects with an id?
+ * The author field can be just the user id, or the entire user details.
+ *
+ * => We use generics. extends allows us to restrict the type.
+ * TAuthor = ID means that by default, the Post author only has an id.
+ * Passing a more specific type further restricts the type of author.
+ */
+type Post<TAuthor = ID> = {
     title: string;
     body: string;
     author: TAuthor
 } & ID;
 
 /**
- * Overload => allow us to get accurate type back
+ * declare is a way to have a typed interface, without worrying about the implementation, for quick prototyping
+ * How to avoid the duplication of the id type ?
+ * Use an indexed type
  */
-declare function getPost(id: string, fetchUserDetails: true): Post<User>
-declare function getPost(id: string, fetchUserDetails: false): Post<ID>
-declare function getPost(id: string, fetchUserDetails?: boolean): Post<User | ID>
-
-declare function getUserDetails(id: string): User
-
-const getPostAuthorUsername = (id: Post<User | ID>["id"]) => {
-    const post = getPost(id); // if force details, post.author is never
-    // Type guard
-    if (isUserDetailed(post.author)) {
-        return post.author.username;
-    }
-    return getUserDetails(post.author.id).username;
-}
-
-const getPostAuthor = (id: Post<User | ID>["id"]) => {
-    return getPost(id, false).author;
-}
+declare function getUserDetails(userId: User["id"]): User
 
 /**
+ * How do you let typescript know the type of user?
  * Type guard: Allows typescript to know which type is the variable in the branch.
  */
 function isUserDetailed(user: User | ID): user is User {
@@ -47,14 +52,43 @@ function isUserDetailed(user: User | ID): user is User {
 }
 
 /**
- * Talk about exhaustive switch
+ * Overload => allow us to get accurate type back
  */
-declare function getAllPosts(): Post<ID>[]
+declare function getPost(id: string, fetchUserDetails: true): Post<User>
+declare function getPost(id: string, fetchUserDetails: false): Post
+declare function getPost(id: string, fetchUserDetails?: boolean): Post<User | ID>
 
-declare function getPublicPosts(): Post<ID>[]
+/**
+ * We take a post id, and would like to return the post's author username.
+ * How to make sure that the username returned is properly typed ?
+ */
+const getPostAuthorUsername = (postId: Post["id"]) => {
+    const post = getPost(postId, false);
+    const postWithDetails = getPost(postId, true);
+    // Type guard
+    if (isUserDetailed(post.author)) {
+        // Author is typed as User
+        return post.author.username;
+    }
+    if (isUserDetailed(postWithDetails.author)) {
+        return postWithDetails.author.username;
+    }
+    // author is never here. We never reach this part of the code.
+    const author = postWithDetails.author.username;
 
-declare function getOwnPosts(userId: User["id"]): Post<ID>[]
+    return getUserDetails(post.author.id).username;
+}
 
+declare function getAllPosts(): Post[]
+
+declare function getPublicPosts(): Post[]
+
+declare function getOwnPosts(userId: User["id"]): Post[]
+
+/**
+ * How can you verify that all the user roles have been implemented at compile time?
+ * You can use the never type
+ */
 function getUserPosts(user: User) {
     switch (user.role) {
         case "admin":
@@ -68,6 +102,3 @@ function getUserPosts(user: User) {
             throw new Error("Not implemented");
     }
 }
-
-
-
