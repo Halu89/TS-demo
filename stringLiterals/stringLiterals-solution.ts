@@ -22,14 +22,16 @@ type CamelCase = string;
  * Note the recursive call.
  */
 type SnakeToCamelCase<S extends string> = S extends `${infer T}_${infer U}` ?
-    `${Lowercase<T>}${Capitalize<Lowercase<SnakeToCamelCase<U>>>}` : S
+    `${Lowercase<T>}${Capitalize<SnakeToCamelCase<Lowercase<U>>>}` : S
 
-declare function snaketoCamelCase<T extends SnakeCase>(str: T): SnakeToCamelCase<T>
+declare function snakeToCamelCase<T extends SnakeCase>(str: T): SnakeToCamelCase<T>
 
 /**
  * How do you type varName as "myVariable"?
  */
-const varName = snaketoCamelCase("MY_VARIABLE")
+const varName = snakeToCamelCase("MY_VARIABLE")
+const otherVar = snakeToCamelCase("MY_OTHER_VARIABLE")
+const var3 = snakeToCamelCase("some str")
 
 /* ================================================== */
 
